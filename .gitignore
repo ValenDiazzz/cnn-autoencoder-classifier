@@ -7,6 +7,7 @@ env/
 
 # Outputs
 Images/
+Autoencoder_weights/
 *.csv
 
 # Data
