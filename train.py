@@ -115,4 +115,4 @@ def autoencoder_training(
         criterion,
         device
     )
-    return train_losses, valid_losses, avg_test_loss
+    return train_losses, valid_losses, avg_test_loss, model
