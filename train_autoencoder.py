@@ -1,10 +1,14 @@
 import torch
 import argparse
+import os
 import numpy as np
 from torch import nn
 from data_utils import data_downloader, adapt_dataset, data_loaders
 from train import autoencoder_training
 from plots import plot_autoencoder_losses
+
+
+WEIGHTS_PATH = "Autoencoder_weights"
 
 
 def parse_args():
@@ -87,7 +91,7 @@ def main():
     # 4. Train autoencoder
     # ------------------------
     print('----------------Training Autoencoder----------------')
-    autoenc_train_losses, autoenc_valid_losses, autoenc_test_loss = autoencoder_training(
+    autoencoder_data = autoencoder_training(
         train_loader,
         valid_loader,
         test_loader,
@@ -97,6 +101,10 @@ def main():
         learning_rate=args.learning_rate,
         epochs=args.epochs
     )
+    autoenc_train_losses = autoencoder_data[0]
+    autoenc_valid_losses = autoencoder_data[1]
+    autoenc_test_loss = autoencoder_data[2]
+    model = autoencoder_data[3]
     print(f"\nFinal Test Loss (MSE): {autoenc_test_loss:.5f}")
 
     # ------------------------
@@ -108,6 +116,13 @@ def main():
         autoenc_test_loss,
         filename="autoencoder_loss_curve.png"
     )
+
+    # ------------------------
+    # 6. Save Autoencoder weights.
+    # ------------------------
+    os.makedirs(WEIGHTS_PATH, exist_ok=True)
+    torch.save(model.encoder.state_dict(), F"{WEIGHTS_PATH}/encoder_weights.pth")
+    print("Encoder saved to encoder_weights.pth")
 
 
 if __name__ == "__main__":
