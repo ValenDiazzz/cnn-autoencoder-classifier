@@ -1,0 +1,118 @@
+from typing import List, Tuple
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from models import ConvAutoencoder
+
+
+def train_loop(
+    model: nn.Module,
+    train_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device
+) -> float:
+    """
+    Run a single training epoch through the whole
+    batch.
+    """
+    model.train()
+    train_loss = 0.0
+
+    for data, target in train_loader:
+
+        # Get sample and target
+        data, target = data.to(device), target.to(device)
+
+        # Compute model prediction and its loss
+        output = model(data)
+        loss = criterion(output, target)
+        train_loss += loss.item()
+
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    avg_loss = train_loss / len(train_loader)
+    return avg_loss
+
+
+def eval_loop(
+    model: nn.Module,
+    test_loader: DataLoader,
+    criterion: nn.Module,
+    device: torch.device
+) -> float:
+    """
+    Run a single evaluation epoch through the whole
+    batch.
+    """
+    model.eval()
+    test_loss = 0.0
+
+    with torch.no_grad():
+        for data, target in test_loader:
+            # Get sample and target
+            data, target = data.to(device), target.to(device)
+
+            # Compute model prediction and its loss
+            output = model(data)
+            loss = criterion(output, target)
+            test_loss += loss.item()
+
+    avg_loss = test_loss / len(test_loader)
+
+    return avg_loss
+
+
+def autoencoder_training(
+    train_loader,
+    valid_loader,
+    test_loader,
+    optimizer_class,
+    criterion,
+    device,
+    learning_rate: float = 1e-3,
+    epochs: int = 20
+) -> Tuple[List[float], List[float], float]:
+
+    model = ConvAutoencoder()
+    model.to(device)
+    optimizer = optimizer_class(model.parameters(), lr=learning_rate)
+
+    train_losses = []
+    valid_losses = []
+
+    for epoch in range(epochs):
+        avg_valid_loss = eval_loop(
+            model,
+            valid_loader,
+            criterion,
+            device
+        )
+        avg_training_loss = train_loop(
+            model,
+            train_loader,
+            criterion,
+            optimizer,
+            device
+        )
+
+        train_losses.append(avg_training_loss)
+        valid_losses.append(avg_valid_loss)
+
+        if (epoch + 1) % max(1, epochs // 10) == 0:
+            print(
+                f"Epoch {epoch+1}/{epochs} - "
+                f"Training Loss: {avg_training_loss:.5f} - "
+                f"Valid Loss: {avg_valid_loss:.5f}"
+            )
+
+    avg_test_loss = eval_loop(
+        model,
+        test_loader,
+        criterion,
+        device
+    )
+    return train_losses, valid_losses, avg_test_loss
