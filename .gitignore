@@ -1,0 +1,13 @@
+# Python env
+__pycache__/
+venv/
+env/
+.venv/
+.vscode/
+
+# Outputs
+Images/
+*.csv
+
+# Data
+MNIST_data/
