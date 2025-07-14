@@ -31,7 +31,7 @@ def data_downloader() -> Tuple[datasets.VisionDataset, datasets.VisionDataset]:
 def adapt_dataset(
     train_dataset: Dataset,
     test_dataset: Dataset,
-    new_class: type = AutoencoderDataset
+    new_class: type
 ) -> Tuple[Dataset, Dataset]:
     """
     Wrap datasets with a new class, such as AutoencoderDataset.

@@ -85,3 +85,24 @@ class ConvAutoencoder(nn.Module):
         latent = self.encoder(x)
         reconstruction = self.decoder(latent)
         return reconstruction
+
+
+class Classifier(nn.Module):
+    def __init__(self, encoder, n_classes=10, p_dropout=0.3):
+        super().__init__()
+        
+        self.encoder = encoder
+        self.encoder.eval()
+        
+        self.classifier = nn.Sequential(
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(p_dropout),
+            nn.Linear(32, n_classes)
+        )
+    
+    def forward(self, x):
+        with torch.no_grad():
+            latent = self.encoder(x)
+        logits = self.classifier(latent)
+        return logits

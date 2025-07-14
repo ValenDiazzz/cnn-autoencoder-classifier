@@ -18,3 +18,18 @@ class AutoencoderDataset(Dataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+class ClassificationDataset(Dataset):
+    """
+    Dataset wrapper for training the classifier.
+    """
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def __getitem__(self, idx):
+        img, label = self.dataset[idx]
+        return img, label
+
+    def __len__(self):
+        return len(self.dataset)

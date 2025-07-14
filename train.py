@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from models import ConvAutoencoder
 
 
-def train_loop(
+def train_encoder_loop(
     model: nn.Module,
     train_loader: DataLoader,
     criterion: nn.Module,
@@ -38,7 +38,7 @@ def train_loop(
     return avg_loss
 
 
-def eval_loop(
+def eval_encoder_loop(
     model: nn.Module,
     test_loader: DataLoader,
     criterion: nn.Module,
@@ -85,13 +85,13 @@ def autoencoder_training(
     valid_losses = []
 
     for epoch in range(epochs):
-        avg_valid_loss = eval_loop(
+        avg_valid_loss = eval_encoder_loop(
             model,
             valid_loader,
             criterion,
             device
         )
-        avg_training_loss = train_loop(
+        avg_training_loss = train_encoder_loop(
             model,
             train_loader,
             criterion,
@@ -109,10 +109,47 @@ def autoencoder_training(
                 f"Valid Loss: {avg_valid_loss:.5f}"
             )
 
-    avg_test_loss = eval_loop(
+    avg_test_loss = eval_encoder_loop(
         model,
         test_loader,
         criterion,
         device
     )
     return train_losses, valid_losses, avg_test_loss, model
+
+
+def train_loop_classifier(model, train_loader, criterion, optimizer, device):
+    model.train()
+    train_loss, correct, total = 0.0, 0, 0
+    for data, target in train_loader:
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+        preds = output.argmax(dim=1)
+        correct += (preds == target).sum().item()
+        total += target.size(0)
+    avg_loss = train_loss / len(train_loader)
+    accuracy = correct / total
+    return avg_loss, accuracy
+
+
+def eval_loop_classifier(model, val_loader, criterion, device):
+    model.eval()
+    val_loss, correct, total = 0.0, 0, 0
+    with torch.no_grad():
+        for data, target in val_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            loss = criterion(output, target)
+            val_loss += loss.item()
+            preds = output.argmax(dim=1)
+            correct += (preds == target).sum().item()
+            total += target.size(0)
+    avg_loss = val_loss / len(val_loader)
+    accuracy = correct / total
+    return avg_loss, accuracy

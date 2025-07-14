@@ -6,6 +6,7 @@ from torch import nn
 from data_utils import data_downloader, adapt_dataset, data_loaders
 from train import autoencoder_training
 from plots import plot_autoencoder_losses
+from datasets import AutoencoderDataset
 
 
 WEIGHTS_PATH = "Autoencoder_weights"
@@ -70,7 +71,8 @@ def main():
         train_dataset, test_dataset = data_downloader()
         train_dataset, test_dataset = adapt_dataset(
             train_dataset,
-            test_dataset
+            test_dataset,
+            AutoencoderDataset
         )
         train_loader, valid_loader, test_loader = data_loaders(
             train_dataset,
