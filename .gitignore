@@ -4,10 +4,11 @@ venv/
 env/
 .venv/
 .vscode/
+*.ipynb
 
 # Outputs
 Images/
-Autoencoder_weights/
+Weights/
 *.csv
 
 # Data
