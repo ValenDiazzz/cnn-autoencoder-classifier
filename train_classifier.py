@@ -6,11 +6,11 @@ from torch import nn
 from data_utils import data_downloader, adapt_dataset, data_loaders
 from models import ConvAutoencoder, Classifier
 from train import train_loop_classifier, eval_loop_classifier
-from plots import plot_loss_accuracy, plot_confusion_matrix
+from plots import plot_classifier_loss, plot_classifier_accuracy, plot_confusion_matrix
 from datasets import ClassificationDataset
 
 
-WEIGHTS_PATH = "Autoencoder_weights"
+WEIGHTS_PATH = "Weights"
 
 
 def parse_args():
@@ -93,11 +93,11 @@ def main():
     train_accuracies, valid_accuracies = [], []
 
     for epoch in range(epochs):
-        train_loss, train_acc = train_loop_classifier(
-            classifier, train_loader, criterion, optimizer, device
-        )
         valid_loss, valid_acc = eval_loop_classifier(
             classifier, valid_loader, criterion, device
+        )
+        train_loss, train_acc = train_loop_classifier(
+            classifier, train_loader, criterion, optimizer, device
         )
 
         train_losses.append(train_loss)
@@ -124,16 +124,25 @@ def main():
     # Plot results
     # -----------------------
     os.makedirs("Images", exist_ok=True)
-    plot_loss_accuracy(
+    plot_classifier_loss(
         train_losses, valid_losses,
-        train_accuracies, valid_accuracies,
-        filename="Images/classifier_loss_accuracy.png"
+        filename="Images/classifier_loss.png"
     )
-
+    plot_classifier_accuracy(
+        train_accuracies, valid_accuracies,
+        filename="Images/classifier_accuracy.png"
+    )
     plot_confusion_matrix(
         classifier, test_loader, device,
         class_names=[str(i) for i in range(10)]
     )
+
+    # -----------------------
+    # Save classifier weights
+    # -----------------------
+    os.makedirs(WEIGHTS_PATH, exist_ok=True)
+    torch.save(classifier.state_dict(), f"{WEIGHTS_PATH}/classifier_weights.pth")
+    print(f"Classifier weights saved to '{WEIGHTS_PATH}/classifier_weights.pth'")
 
 
 if __name__ == "__main__":

@@ -72,43 +72,51 @@ def plot_confusion_matrix(model, loader, device, class_names, filename = "confus
     plt.close()
 
 
-def plot_loss_accuracy(
+def plot_classifier_loss(
     train_losses: List[float],
     valid_losses: List[float],
-    train_accuracies: List[float],
-    valid_accuracies: List[float],
-    filename: str = "classifier_loss_accuracy.png"
+    filename: str = "Images/classifier_loss.png"
 ) -> None:
     """
-    Plot loss and accuracy curves for training and validation.
+    Plot training and validation loss curves (CrossEntropy).
 
     Saves the figure to the 'Images' directory.
     """
     os.makedirs("Images", exist_ok=True)
-
-    fig, ax1 = plt.subplots(figsize=(8, 5))
-
-    # Plot losses on left axis
-    ax1.set_xlabel("Epoch")
-    ax1.set_ylabel("Loss (CrossEntropy)", color="tab:red")
-    ax1.plot(train_losses, label="Train Loss", color="tab:red", linestyle="-")
-    ax1.plot(valid_losses, label="Valid Loss", color="tab:red", linestyle="--")
-    ax1.tick_params(axis="y", labelcolor="tab:red")
-    ax1.legend(loc="upper left")
-
-    # Plot accuracies on right axis
-    ax2 = ax1.twinx()
-    ax2.set_ylabel("Accuracy", color="tab:blue")
-    ax2.plot(train_accuracies, label="Train Acc", color="tab:blue", linestyle="-")
-    ax2.plot(valid_accuracies, label="Valid Acc", color="tab:blue", linestyle="--")
-    ax2.tick_params(axis="y", labelcolor="tab:blue")
-
-    # Combined legend
-    fig.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=2)
-    fig.tight_layout()
-
-    # Save figure
-    save_path = os.path.join("Images", filename)
+    plt.figure(figsize=(8,5))
+    plt.plot(train_losses, label="Train Loss", linestyle="-")
+    plt.plot(valid_losses, label="Valid Loss", linestyle="--")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss (CrossEntropy)")
+    plt.title("Classifier Loss")
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.tight_layout()
     plt.savefig(filename)
-    print(f"Saved loss/accuracy plot to '{filename}'")
+    print(f"Saved classifier loss plot to '{filename}'")
+    plt.close()
+
+
+def plot_classifier_accuracy(
+    train_accuracies: List[float],
+    valid_accuracies: List[float],
+    filename: str = "Images/classifier_accuracy.png"
+) -> None:
+    """
+    Plot training and validation accuracy curves.
+
+    Saves the figure to the 'Images' directory.
+    """
+    os.makedirs("Images", exist_ok=True)
+    plt.figure(figsize=(8,5))
+    plt.plot(train_accuracies, label="Train Accuracy", linestyle="-")
+    plt.plot(valid_accuracies, label="Valid Accuracy", linestyle="--")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Classifier Accuracy")
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.tight_layout()
+    plt.savefig(filename)
+    print(f"Saved classifier accuracy plot to '{filename}'")
     plt.close()

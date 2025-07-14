@@ -9,7 +9,7 @@ from plots import plot_autoencoder_losses
 from datasets import AutoencoderDataset
 
 
-WEIGHTS_PATH = "Autoencoder_weights"
+WEIGHTS_PATH = "Weights"
 
 
 def parse_args():
@@ -56,14 +56,14 @@ def main():
 
     args = parse_args()
     # ------------------------
-    # 1. Set seeds and device
+    # Set seeds and device
     # ------------------------
     set_seeds(42)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
     # ------------------------
-    # 2. Download and prepare datasets
+    # Download and prepare datasets
     # ------------------------
     print('----------------Downloading Fashio-MNIST dataset----------------')
 
@@ -84,13 +84,13 @@ def main():
         print(f'Error in downloadinf the data:\n {str(e)}')
 
     # ------------------------
-    # 3. Setup optimizer and loss
+    # Setup optimizer and loss
     # ------------------------
     optimizer_class = torch.optim.Adam if args.optimizer == "ADAM" else torch.optim.SGD
     criterion = nn.MSELoss()
 
     # ------------------------
-    # 4. Train autoencoder
+    # Train autoencoder
     # ------------------------
     print('----------------Training Autoencoder----------------')
     autoencoder_data = autoencoder_training(
@@ -110,7 +110,7 @@ def main():
     print(f"\nFinal Test Loss (MSE): {autoenc_test_loss:.5f}")
 
     # ------------------------
-    # 5. Plot and save losses
+    # Plot and save losses
     # ------------------------
     plot_autoencoder_losses(
         autoenc_train_losses,
@@ -120,7 +120,7 @@ def main():
     )
 
     # ------------------------
-    # 6. Save Autoencoder weights.
+    # Save Autoencoder weights.
     # ------------------------
     os.makedirs(WEIGHTS_PATH, exist_ok=True)
     torch.save(model.encoder.state_dict(), F"{WEIGHTS_PATH}/encoder_weights.pth")
