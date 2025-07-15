@@ -93,9 +93,17 @@ class Classifier(nn.Module):
 
         self.encoder = encoder
         self.encoder.eval()
+        device = next(self.encoder.parameters()).device
 
+        # Inferir automáticamente el tamaño del espacio latente
+        with torch.no_grad():
+            dummy_input = torch.randn(1, 1, 28, 28, device=device)
+            latent = self.encoder(dummy_input)
+            latent_dim = latent.shape[1]
+
+        # Ahora construimos la cabeza del classifier con esa dimensión
         self.classifier = nn.Sequential(
-            nn.Linear(64, 32),
+            nn.Linear(latent_dim, 32),
             nn.ReLU(),
             nn.Dropout(p_dropout),
             nn.Linear(32, n_classes)
