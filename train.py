@@ -73,12 +73,11 @@ def autoencoder_training(
     optimizer_class,
     criterion,
     device,
+    model,
     learning_rate: float = 1e-3,
-    epochs: int = 20
+    epochs: int = 20,
 ) -> Tuple[List[float], List[float], float]:
-
-    model = ConvAutoencoder()
-    model.to(device)
+    
     optimizer = optimizer_class(model.parameters(), lr=learning_rate)
 
     train_losses = []
@@ -115,7 +114,7 @@ def autoencoder_training(
         criterion,
         device
     )
-    return train_losses, valid_losses, avg_test_loss, model
+    return train_losses, valid_losses, avg_test_loss, model#, min(valid_losses)
 
 
 def train_loop_classifier(model, train_loader, criterion, optimizer, device):
@@ -153,3 +152,67 @@ def eval_loop_classifier(model, val_loader, criterion, device):
     avg_loss = val_loss / len(val_loader)
     accuracy = correct / total
     return avg_loss, accuracy
+
+
+def classifier_training(
+    train_loader,
+    valid_loader,
+    test_loader,
+    optimizer_class,
+    criterion,
+    device,
+    model,
+    learning_rate: float = 1e-3,
+    epochs: int = 20,
+):
+    """
+    Entrena un clasificador CNN con un encoder preentrenado
+    y registra las métricas de loss y accuracy para train/valid.
+
+    Retorna:
+        train_losses, valid_losses, train_accuracies, valid_accuracies, test_loss, test_accuracy, modelo_final
+    """
+    optimizer = optimizer_class(model.parameters(), lr=learning_rate)
+
+    train_losses, valid_losses = [], []
+    train_accuracies, valid_accuracies = [], []
+
+    for epoch in range(epochs):
+        # Validation antes del entrenamiento
+        valid_loss, valid_acc = eval_loop_classifier(
+            model,
+            valid_loader,
+            criterion,
+            device
+        )
+
+        # Entrenamiento
+        train_loss, train_acc = train_loop_classifier(
+            model,
+            train_loader,
+            criterion,
+            optimizer,
+            device
+        )
+
+        train_losses.append(train_loss)
+        valid_losses.append(valid_loss)
+        train_accuracies.append(train_acc)
+        valid_accuracies.append(valid_acc)
+
+        if (epoch + 1) % max(1, epochs // 10) == 0:
+            print(
+                f"Epoch {epoch+1}/{epochs} - "
+                f"Train Loss: {train_loss:.4f}, Acc: {train_acc:.4f} | "
+                f"Valid Loss: {valid_loss:.4f}, Acc: {valid_acc:.4f}"
+            )
+
+    # Evaluación final en test set
+    test_loss, test_acc = eval_loop_classifier(
+        model,
+        test_loader,
+        criterion,
+        device
+    )
+
+    return train_losses, valid_losses, train_accuracies, valid_accuracies, test_loss, test_acc, model
