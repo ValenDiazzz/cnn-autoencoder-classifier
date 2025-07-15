@@ -41,6 +41,13 @@ def parse_args() -> argparse.Namespace:
         default=20,
         help="Number of epochs to train (default: 20)"
     )
+    parser.add_argument(
+        "--pretrained_enc",
+        '-pe',
+        type=bool,
+        default=True,
+        help="Modify pretrained encoder weights in learning (Default: True)"
+    )
     return parser.parse_args()
 
 
@@ -71,7 +78,7 @@ def main() -> None:
     train_dataset, test_dataset = adapt_dataset(
         train_dataset,
         test_dataset,
-        new_class=ClassificationDataset
+        dataset_wrapper=ClassificationDataset
     )
     train_loader, valid_loader, test_loader = data_loaders(
         train_dataset,
@@ -105,6 +112,9 @@ def main() -> None:
     # -----------------------
     classifier = Classifier(encoder=encoder, n_classes=10, p_dropout=0.3)
     classifier.to(device)
+    if not args.pretrained_enc:
+        for param in classifier.encoder.parameters():
+            param.requires_grad = False
 
     # -----------------------
     # Training loop

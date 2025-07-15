@@ -101,7 +101,6 @@ class Classifier(nn.Module):
         """
         Perform a forward pass through the classifier.
         """
-        with torch.no_grad():
-            latent = self.encoder(x)
+        latent = self.encoder(x)
         logits = self.classifier(latent)
         return logits
