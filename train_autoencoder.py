@@ -1,24 +1,28 @@
-import torch
-import argparse
 import os
+import argparse
 import itertools
+from typing import List, Tuple
+
 import numpy as np
+import torch
 from torch import nn
+
 from data_utils import data_downloader, adapt_dataset, data_loaders
 from train import autoencoder_training
 from plots import plot_autoencoder_losses
 from datasets import AutoencoderDataset
 from models import ConvAutoencoder
 
-
 WEIGHTS_PATH = "Weights"
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
-    Parse command-line arguments.
+    Parse command-line arguments for training the autoencoder.
     """
-    parser = argparse.ArgumentParser(description="Train Autoencoder on Fashion-MNIST")
+    parser = argparse.ArgumentParser(
+        description="Train Autoencoder on Fashion-MNIST"
+    )
     parser.add_argument(
         "--optimizer",
         '-opt',
@@ -79,12 +83,17 @@ def run_hyperparameter_tuning(
     test_loader,
     optimizer_class,
     criterion,
-    device,
-    learning_rates,
-    dropouts,
-    latent_dims,
-    epochs
-):
+    device: torch.device,
+    learning_rates: List[float],
+    dropouts: List[float],
+    latent_dims: List[int],
+    epochs: int
+) -> None:
+    """
+    Perform grid search over hyperparameters and save the best model.
+
+    Saves the best encoder weights to Weights/encoder_weights.pth
+    """
     best_valid_loss = float('inf')
     best_model = None
     best_config = None
@@ -92,10 +101,8 @@ def run_hyperparameter_tuning(
     for lr, p_dropout, latent_dim in itertools.product(learning_rates, dropouts, latent_dims):
         print(f"\nTrying: lr={lr}, dropout={p_dropout}, latent_dim={latent_dim}")
 
-        # Instanciar modelo con estos hiperparámetros
         model = ConvAutoencoder(n=latent_dim, p_dropout=p_dropout).to(device)
 
-        # Entrenar
         train_losses, valid_losses, test_loss, final_model = autoencoder_training(
             train_loader,
             valid_loader,
@@ -116,15 +123,14 @@ def run_hyperparameter_tuning(
             best_model = final_model
             best_config = (lr, p_dropout, latent_dim)
 
-    # Guardar mejor modelo
     torch.save(best_model.state_dict(), f"{WEIGHTS_PATH}/encoder_weights.pth")
     print(f"\nBest config: lr={best_config[0]}, dropout={best_config[1]}, latent_dim={best_config[2]}")
     print(f"Best min valid loss: {best_valid_loss:.5f}")
 
 
-def main():
-
+def main() -> None:
     args = parse_args()
+
     # ------------------------
     # Set seeds and device
     # ------------------------
@@ -199,6 +205,7 @@ def main():
         autoenc_valid_losses = autoencoder_data[1]
         autoenc_test_loss = autoencoder_data[2]
         model = autoencoder_data[3]
+
         print(f"\nFinal Test Loss (MSE): {autoenc_test_loss:.5f}")
 
         # ------------------------

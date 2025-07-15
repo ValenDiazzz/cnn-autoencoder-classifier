@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
-from typing import List, Optional
 import os
-from sklearn.metrics import confusion_matrix
-import seaborn as sns
-import matplotlib.pyplot as plt
+from typing import List, Optional
 import torch
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 
 def plot_autoencoder_losses(
@@ -14,10 +13,18 @@ def plot_autoencoder_losses(
     filename: str = "autoencoder_loss.png"
 ) -> None:
     """
-    Plot training and validation loss curves for the autoencoder,
-    and save the figure as a PNG in the 'Images' folder.
+    Plot training and validation MSE loss for the autoencoder.
+
+    Args:
+        train_losses (List[float]): Training losses over epochs.
+        valid_losses (List[float]): Validation losses over epochs.
+        test_loss (Optional[float]): Optional test loss to draw as a line.
+        filename (str): Filename for saving the plot.
+
+    Saves:
+        A PNG figure in the 'Images' directory.
     """
-    # Ensure the Images directory exists
+
     os.makedirs("Images", exist_ok=True)
 
     plt.figure(figsize=(8, 5))
@@ -40,16 +47,35 @@ def plot_autoencoder_losses(
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
 
-    # Save the plot to the Images directory
     save_path = os.path.join("Images", filename)
     plt.savefig(save_path)
     print(f"Saved loss plot to '{save_path}'")
     plt.close()
 
 
-def plot_confusion_matrix(model, loader, device, class_names, filename = "confusion_matrix.png"):
+def plot_confusion_matrix(
+    model: torch.nn.Module,
+    loader: torch.utils.data.DataLoader,
+    device: torch.device,
+    class_names: List[str],
+    filename: str = "confusion_matrix.png"
+) -> None:
+    """
+    Generate and save a confusion matrix heatmap.
+
+    Args:
+        model (torch.nn.Module): Trained classifier model.
+        loader (DataLoader): DataLoader to evaluate.
+        device (torch.device): CPU or CUDA device.
+        class_names (List[str]): Names for each class.
+        filename (str): Filename for saving the plot.
+
+    Saves:
+        A PNG figure in the 'Images' directory.
+    """
     all_preds = []
     all_labels = []
+
     model.eval()
     with torch.no_grad():
         for data, target in loader:
@@ -58,17 +84,25 @@ def plot_confusion_matrix(model, loader, device, class_names, filename = "confus
             preds = output.argmax(dim=1)
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(target.cpu().numpy())
+
     cm = confusion_matrix(all_labels, all_preds)
-    plt.figure(figsize=(8,6))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                xticklabels=class_names, yticklabels=class_names)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=class_names,
+        yticklabels=class_names
+    )
     plt.xlabel("Predicted")
     plt.ylabel("True")
     plt.title("Confusion Matrix")
-    # Save figure
+    
+    os.makedirs("Images", exist_ok=True)
     save_path = os.path.join("Images", filename)
     plt.savefig(save_path)
-    print(f"Saved loss/accuracy plot to 'Images/{filename}'")
+    print(f"Saved confusion matrix to '{save_path}'")
     plt.close()
 
 
@@ -78,12 +112,18 @@ def plot_classifier_loss(
     filename: str = "Images/classifier_loss.png"
 ) -> None:
     """
-    Plot training and validation loss curves (CrossEntropy).
+    Plot training and validation CrossEntropy loss.
 
-    Saves the figure to the 'Images' directory.
+    Args:
+        train_losses (List[float]): Training losses over epochs.
+        valid_losses (List[float]): Validation losses over epochs.
+        filename (str): Filename for saving the plot.
+
+    Saves:
+        A PNG figure in the 'Images' directory.
     """
     os.makedirs("Images", exist_ok=True)
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(8, 5))
     plt.plot(train_losses, label="Train Loss", linestyle="-")
     plt.plot(valid_losses, label="Valid Loss", linestyle="--")
     plt.xlabel("Epoch")
@@ -103,12 +143,18 @@ def plot_classifier_accuracy(
     filename: str = "Images/classifier_accuracy.png"
 ) -> None:
     """
-    Plot training and validation accuracy curves.
+    Plot training and validation accuracy.
 
-    Saves the figure to the 'Images' directory.
+    Args:
+        train_accuracies (List[float]): Training accuracy over epochs.
+        valid_accuracies (List[float]): Validation accuracy over epochs.
+        filename (str): Filename for saving the plot.
+
+    Saves:
+        A PNG figure in the 'Images' directory.
     """
     os.makedirs("Images", exist_ok=True)
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(8, 5))
     plt.plot(train_accuracies, label="Train Accuracy", linestyle="-")
     plt.plot(valid_accuracies, label="Valid Accuracy", linestyle="--")
     plt.xlabel("Epoch")

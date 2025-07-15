@@ -1,23 +1,32 @@
 import os
-import torch
 import argparse
+from typing import Tuple, List
+
 import numpy as np
+import torch
 from torch import nn
+
 from data_utils import data_downloader, adapt_dataset, data_loaders
 from models import ConvAutoencoder, Classifier
 from train import classifier_training
-from plots import plot_classifier_loss, plot_classifier_accuracy, plot_confusion_matrix
+from plots import (
+    plot_classifier_loss,
+    plot_classifier_accuracy,
+    plot_confusion_matrix
+)
 from datasets import ClassificationDataset
 
 
 WEIGHTS_PATH = "Weights"
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """
     Parse command-line arguments.
     """
-    parser = argparse.ArgumentParser(description="Train CNN with Autoencoder on Fashion-MNIST")
+    parser = argparse.ArgumentParser(
+        description="Train CNN with Autoencoder on Fashion-MNIST"
+    )
     parser.add_argument(
         "--learning_rate",
         '-lr',
@@ -36,15 +45,21 @@ def parse_args():
 
 
 def set_seeds(seed: int = 42) -> None:
+    """
+    Fix random seeds for reproducibility.
+    """
     torch.manual_seed(seed)
     np.random.seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
 
-def main():
-
+def main() -> None:
     args = parse_args()
+
+    # ------------------------
+    # Set seeds and device
+    # ------------------------
     set_seeds(42)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -94,7 +109,6 @@ def main():
     # -----------------------
     # Training loop
     # -----------------------
-
     print('----------------Training Classifier----------------')
 
     train_data = classifier_training(

@@ -1,3 +1,4 @@
+from typing import Any, Tuple
 from torch.utils.data import Dataset
 
 
@@ -8,7 +9,11 @@ class AutoencoderDataset(Dataset):
     This class takes an existing dataset and adapts it
     to be used for training an autoencoder, where both
     the input and the target are the same image.
+
+    Attributes:
+        dataset (Dataset): The original dataset containing images.
     """
+
     def __init__(self, dataset):
         self.dataset = dataset
 
@@ -22,8 +27,15 @@ class AutoencoderDataset(Dataset):
 
 class ClassificationDataset(Dataset):
     """
-    Dataset wrapper for training the classifier.
+    Dataset wrapper for training classifiers.
+
+    This class takes an existing dataset and adapts it
+    to return (image, label) pairs for classification.
+
+    Attributes:
+        dataset (Dataset): The original dataset containing images and labels.
     """
+
     def __init__(self, dataset):
         self.dataset = dataset
 
