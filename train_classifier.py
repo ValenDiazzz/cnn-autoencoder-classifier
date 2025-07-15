@@ -5,7 +5,7 @@ import numpy as np
 from torch import nn
 from data_utils import data_downloader, adapt_dataset, data_loaders
 from models import ConvAutoencoder, Classifier
-from train import train_loop_classifier, eval_loop_classifier
+from train import classifier_training
 from plots import plot_classifier_loss, plot_classifier_accuracy, plot_confusion_matrix
 from datasets import ClassificationDataset
 
@@ -65,11 +65,23 @@ def main():
     )
 
     # -----------------------
-    # Load pretrained encoder
+    # Load pretrained encoder (with automatic latent_dim detection)
     # -----------------------
-    autoencoder = ConvAutoencoder()
     encoder_weights_path = WEIGHTS_PATH + "/encoder_weights.pth"
-    autoencoder.encoder.load_state_dict(torch.load(encoder_weights_path, map_location=device))
+    state_dict = torch.load(encoder_weights_path, map_location=device)
+
+    # Detect latent_dim
+    try:
+        latent_dim = state_dict['9.weight'].shape[0]
+        print(f"[INFO] Detected latent_dim from encoder weights: {latent_dim}")
+    except KeyError:
+        raise RuntimeError(
+            "Could not find '9.weight' in state_dict. "
+            "Make sure your encoder architecture hasn't changed."
+        )
+
+    autoencoder = ConvAutoencoder(n=latent_dim)
+    autoencoder.encoder.load_state_dict(state_dict)
     encoder = autoencoder.encoder
     encoder.eval()
 
@@ -80,45 +92,29 @@ def main():
     classifier.to(device)
 
     # -----------------------
-    # Setup optimizer and loss
-    # -----------------------
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(classifier.parameters(), lr=args.learning_rate)
-    epochs = args.epochs
-
-    # -----------------------
     # Training loop
     # -----------------------
-    train_losses, valid_losses = [], []
-    train_accuracies, valid_accuracies = [], []
 
-    for epoch in range(epochs):
-        valid_loss, valid_acc = eval_loop_classifier(
-            classifier, valid_loader, criterion, device
-        )
-        train_loss, train_acc = train_loop_classifier(
-            classifier, train_loader, criterion, optimizer, device
-        )
+    print('----------------Training Classifier----------------')
 
-        train_losses.append(train_loss)
-        valid_losses.append(valid_loss)
-        train_accuracies.append(train_acc)
-        valid_accuracies.append(valid_acc)
-
-        if (epoch + 1) % max(1, epochs // 10) == 0:
-            print(
-                f"Epoch {epoch+1}/{epochs} - "
-                f"Train Loss: {train_loss:.4f}, Acc: {train_acc:.4f} | "
-                f"Valid Loss: {valid_loss:.4f}, Acc: {valid_acc:.4f}"
-            )
-
-    # -----------------------
-    # Evaluate on test set
-    # -----------------------
-    test_loss, test_acc = eval_loop_classifier(
-        classifier, test_loader, criterion, device
+    train_data = classifier_training(
+        train_loader,
+        valid_loader,
+        test_loader,
+        torch.optim.Adam,
+        nn.CrossEntropyLoss(),
+        device,
+        classifier,
+        learning_rate=args.learning_rate,
+        epochs=args.epochs
     )
-    print(f"\nTest Loss: {test_loss:.4f} - Test Acc: {test_acc:.4f}")
+
+    train_losses, valid_losses = train_data[0], train_data[1]
+    train_accuracies, valid_accuracies = train_data[2], train_data[3]
+    test_loss, test_acc = train_data[4], train_data[5]
+    classifier = train_data[6]
+
+    print(f"\nFinal Test Loss: {test_loss:.4f} - Test Accuracy: {test_acc:.4f}")
 
     # -----------------------
     # Plot results
