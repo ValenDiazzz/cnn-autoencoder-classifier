@@ -113,7 +113,7 @@ def autoencoder_training(
         criterion,
         device
     )
-    return train_losses, valid_losses, avg_test_loss, model#, min(valid_losses)
+    return train_losses, valid_losses, avg_test_loss, model
 
 
 def train_loop_classifier(model, train_loader, criterion, optimizer, device):
