@@ -12,8 +12,17 @@ def train_encoder_loop(
     device: torch.device
 ) -> float:
     """
-    Run a single training epoch through the whole
-    batch.
+    Run one epoch of training for the convolutional autoencoder.
+
+    Args:
+        model (nn.Module): The autoencoder model to be trained.
+        train_loader (DataLoader): DataLoader for training dataset.
+        criterion (nn.Module): Loss function (e.g., MSELoss).
+        optimizer (Optimizer): Optimizer used for training (e.g., Adam).
+        device (torch.device): Computation device (CPU or CUDA).
+
+    Returns:
+        float: Average training loss over the epoch.
     """
     model.train()
     train_loss = 0.0
@@ -44,8 +53,16 @@ def eval_encoder_loop(
     device: torch.device
 ) -> float:
     """
-    Run a single evaluation epoch through the whole
-    batch.
+    Run one epoch of evaluation for the convolutional autoencoder.
+
+    Args:
+        model (nn.Module): The trained autoencoder model.
+        test_loader (DataLoader): DataLoader for validation or test set.
+        criterion (nn.Module): Loss function (e.g., MSELoss).
+        device (torch.device): Computation device (CPU or CUDA).
+
+    Returns:
+        float: Average evaluation loss over the epoch.
     """
     model.eval()
     test_loss = 0.0
@@ -75,8 +92,29 @@ def autoencoder_training(
     model,
     learning_rate: float = 1e-3,
     epochs: int = 20,
-) -> Tuple[List[float], List[float], float]:
-    
+) -> Tuple[List[float], List[float], float, nn.Module]:
+    """
+    Complete training process for the autoencoder over multiple epochs.
+    Includes training, validation, and final testing phases.
+
+    Args:
+        train_loader (DataLoader): Training data.
+        valid_loader (DataLoader): Validation data.
+        test_loader (DataLoader): Test data.
+        optimizer_class (type): Optimizer class (e.g., torch.optim.Adam).
+        criterion (nn.Module): Loss function (e.g., MSELoss).
+        device (torch.device): Computation device.
+        model (nn.Module): The autoencoder instance.
+        learning_rate (float): Learning rate for optimizer.
+        epochs (int): Number of training epochs.
+
+    Returns:
+        Tuple[List[float], List[float], float, nn.Module]:
+            - List of training losses
+            - List of validation losses
+            - Final test loss
+            - Trained model
+    """
     optimizer = optimizer_class(model.parameters(), lr=learning_rate)
 
     train_losses = []
@@ -116,7 +154,28 @@ def autoencoder_training(
     return train_losses, valid_losses, avg_test_loss, model
 
 
-def train_loop_classifier(model, train_loader, criterion, optimizer, device):
+def train_loop_classifier(
+    model: nn.Module,
+    train_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device
+) -> Tuple[float, float]:
+    """
+    Train the classifier model for one epoch and compute loss and accuracy.
+
+    Args:
+        model (nn.Module): Classifier model with encoder + head.
+        train_loader (DataLoader): DataLoader for training dataset.
+        criterion (nn.Module): CrossEntropyLoss function.
+        optimizer (Optimizer): Optimizer for training.
+        device (torch.device): CPU or CUDA.
+
+    Returns:
+        Tuple[float, float]:
+            - Average training loss
+            - Training accuracy
+    """
     model.train()
     train_loss, correct, total = 0.0, 0, 0
     for data, target in train_loader:
@@ -136,7 +195,26 @@ def train_loop_classifier(model, train_loader, criterion, optimizer, device):
     return avg_loss, accuracy
 
 
-def eval_loop_classifier(model, val_loader, criterion, device):
+def eval_loop_classifier(
+    model: nn.Module,
+    val_loader: DataLoader,
+    criterion: nn.Module,
+    device: torch.device
+) -> Tuple[float, float]:
+    """
+    Evaluate the classifier model for one epoch and compute loss and accuracy.
+
+    Args:
+        model (nn.Module): Classifier model.
+        val_loader (DataLoader): DataLoader for validation or test dataset.
+        criterion (nn.Module): CrossEntropyLoss function.
+        device (torch.device): CPU or CUDA.
+
+    Returns:
+        Tuple[float, float]:
+            - Average evaluation loss
+            - Evaluation accuracy
+    """
     model.eval()
     val_loss, correct, total = 0.0, 0, 0
     with torch.no_grad():
@@ -154,22 +232,43 @@ def eval_loop_classifier(model, val_loader, criterion, device):
 
 
 def classifier_training(
-    train_loader,
-    valid_loader,
-    test_loader,
-    optimizer_class,
-    criterion,
-    device,
-    model,
+    train_loader: DataLoader,
+    valid_loader: DataLoader,
+    test_loader: DataLoader,
+    optimizer_class: type[torch.optim.Optimizer],
+    criterion: nn.Module,
+    device: torch.device,
+    model: nn.Module,
     learning_rate: float = 1e-3,
     epochs: int = 20,
-):
+) -> Tuple[
+    List[float], List[float],
+    List[float], List[float],
+    float, float, nn.Module
+]:
     """
-    Entrena un clasificador CNN con un encoder preentrenado
-    y registra las métricas de loss y accuracy para train/valid.
+    Full training and evaluation loop for a CNN classifier using a pretrained encoder.
 
-    Retorna:
-        train_losses, valid_losses, train_accuracies, valid_accuracies, test_loss, test_accuracy, modelo_final
+    Args:
+        train_loader (DataLoader): Training set.
+        valid_loader (DataLoader): Validation set.
+        test_loader (DataLoader): Test set.
+        optimizer_class (type): Optimizer class (e.g., torch.optim.Adam).
+        criterion (nn.Module): CrossEntropyLoss.
+        device (torch.device): Computation device.
+        model (nn.Module): Classifier model to train.
+        learning_rate (float): Learning rate for optimizer.
+        epochs (int): Number of training epochs.
+
+    Returns:
+        Tuple[List[float], List[float], List[float], List[float], float, float, nn.Module]:
+            - Training losses
+            - Validation losses
+            - Training accuracies
+            - Validation accuracies
+            - Final test loss
+            - Final test accuracy
+            - Trained model
     """
     optimizer = optimizer_class(model.parameters(), lr=learning_rate)
 
@@ -177,15 +276,12 @@ def classifier_training(
     train_accuracies, valid_accuracies = [], []
 
     for epoch in range(epochs):
-        # Validation antes del entrenamiento
         valid_loss, valid_acc = eval_loop_classifier(
             model,
             valid_loader,
             criterion,
             device
         )
-
-        # Entrenamiento
         train_loss, train_acc = train_loop_classifier(
             model,
             train_loader,
@@ -206,7 +302,6 @@ def classifier_training(
                 f"Valid Loss: {valid_loss:.4f}, Acc: {valid_acc:.4f}"
             )
 
-    # Evaluación final en test set
     test_loss, test_acc = eval_loop_classifier(
         model,
         test_loader,
