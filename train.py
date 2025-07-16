@@ -2,7 +2,6 @@ from typing import List, Tuple
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from models import ConvAutoencoder
 
 
 def train_encoder_loop(

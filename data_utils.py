@@ -1,4 +1,4 @@
-from typing import Tuple, Type
+from typing import Tuple
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import datasets, transforms
 

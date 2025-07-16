@@ -1,7 +1,7 @@
 import os
 import argparse
 import itertools
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import torch
@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
         '-dp',
         type=float,
         default=0.2,
-        help="Dropout for training"
+        help="Dropout for training (Default: 0.2)"
     )
     parser.add_argument(
         "--latent_dim",

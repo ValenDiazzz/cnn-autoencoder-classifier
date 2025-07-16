@@ -1,6 +1,5 @@
 import os
 import argparse
-from typing import Tuple, List
 
 import numpy as np
 import torch

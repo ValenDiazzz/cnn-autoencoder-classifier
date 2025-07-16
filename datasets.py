@@ -1,4 +1,3 @@
-from typing import Any, Tuple
 from torch.utils.data import Dataset
 
 
