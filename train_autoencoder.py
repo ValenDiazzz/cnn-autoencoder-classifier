@@ -123,6 +123,7 @@ def run_hyperparameter_tuning(
             best_model = final_model
             best_config = (lr, p_dropout, latent_dim)
 
+    os.makedirs(WEIGHTS_PATH, exist_ok=True)
     torch.save(best_model.state_dict(), f"{WEIGHTS_PATH}/encoder_weights.pth")
     print(f"\nBest config: lr={best_config[0]}, dropout={best_config[1]}, latent_dim={best_config[2]}")
     print(f"Best min valid loss: {best_valid_loss:.5f}")
