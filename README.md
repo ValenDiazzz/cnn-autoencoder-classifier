@@ -82,7 +82,7 @@ This saves the classifier weights to `Weights/classifier_weights.pth` and genera
 |-------------------|----------------------------------------|---------|
 | `--learning_rate` / `-lr` | Learning rate                 | 1e-3    |
 | `--epochs` / `-ep`      | Number of training epochs       | 20      |
-| `--pretrained_enc` / `-pe` | If `True`, fine-tune encoder; if `False`, freeze encoder | True |
+| `--freeze_encoder` / `-fe` | If -fe in the run command then encoder weights are frozen | ---- |
 ---
 ## Results and Outputs
 - Trained encoder weights are saved in `Weights/encoder_weights.pth`.
