@@ -62,7 +62,7 @@ python train_classifier.py
 ```
 To **freeze the encoder** and train only the classifier head:
 ```bash
-python train_classifier.py --pretrained_enc False
+python train_classifier.py -fe
 ```
 This saves the classifier weights to `Weights/classifier_weights.pth` and generates plots for loss, accuracy, and the confusion matrix in `Images/`.
 ---
