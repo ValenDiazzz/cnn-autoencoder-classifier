@@ -41,14 +41,13 @@ def parse_args() -> argparse.Namespace:
         help="Number of epochs to train (default: 20)"
     )
     parser.add_argument(
-        "--pretrained_enc",
-        '-pe',
-        type=bool,
-        default=True,
-        help="Modify pretrained encoder weights in learning (Default: True)"
+        "--freeze_encoder",
+        '-fe',
+        action="store_true",
+        help="If specified, encoder weights are frozen during classifier training."
     )
     return parser.parse_args()
-
+    
 
 def set_seeds(seed: int = 42) -> None:
     """
@@ -104,16 +103,17 @@ def main() -> None:
     autoencoder = ConvAutoencoder(n=latent_dim)
     autoencoder.encoder.load_state_dict(state_dict)
     encoder = autoencoder.encoder
-    encoder.eval()
 
     # -----------------------
     # Create classifier model
     # -----------------------
-    classifier = Classifier(encoder=encoder, n_classes=10, p_dropout=0.3)
+    classifier = Classifier(
+        encoder=encoder,
+        n_classes=10,
+        p_dropout=0.3,
+        freeze_encoder=args.freeze_encoder
+    )
     classifier.to(device)
-    if not args.pretrained_enc:
-        for param in classifier.encoder.parameters():
-            param.requires_grad = False
 
     # -----------------------
     # Training loop

@@ -75,11 +75,19 @@ class Classifier(nn.Module):
         self,
         encoder: nn.Module,
         n_classes: int = 10,
-        p_dropout: float = 0.1
+        p_dropout: float = 0.1,
+        freeze_encoder: bool = False
     ) -> None:
         super().__init__()
         self.encoder = encoder
-        self.encoder.eval()
+        
+        if freeze_encoder:
+            for param in self.encoder.parameters():
+                param.requires_grad = False
+            self.encoder.eval()
+        else:
+            self.encoder.train()
+
         device = next(self.encoder.parameters()).device
 
         # Automatically infer latent dimension
